@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>上架书籍</title>
+		<link rel="stylesheet" href="../../layuiadmin/layui/css/layui.css" media="all">
+		<script src="../../layuiadmin/js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/getCookie.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/Tools.js" type="text/javascript" charset="utf-8"></script>
+		<style type="text/css">
+			.layui-form{
+				position: relative;
+			}
+			.upload{
+				position: absolute;
+				top: 73%;
+				right: 20%;
+			}
+			.img{
+				position: absolute;
+				top: 10%;
+				right: 15%;
+			}
+			.img img{
+				width: 260px;
+				height: 360px;
+			}
+			#test1{
+				margin-top: 20px;	
+			}
+		</style>
+	</head>
+	<body>
+		<div class="layui-fluid">
+			<div class="layui-card" style="padding: 10px 20px 20px 20px;margin-top: 20px;">
+				<fieldset class="layui-elem-field layui-field-title">
+					<legend>上架书籍</legend>
+				</fieldset>
+				<div class="layui-form layui-row">
+					<div class="layui-form-item layui-col-xs6">
+						<label class="layui-form-label">书名：</label>
+						<div class="layui-input-block" style="margin-right: -10px;">
+							<input type="text" :value="obj.name" required lay-verify="required" name="name"  autocomplete="off" placeholder="请输入书名" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-form-item layui-col-xs6">
+						<label class="layui-form-label">作者：</label>
+						<div class="layui-input-block" style="margin-right: -10px;">
+							<input type="text" :value="obj.author" required lay-verify="required" name="author"  autocomplete="off" placeholder="请输入作者" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-form-item layui-col-xs6">
+						<label class="layui-form-label">ISBN号：</label>
+						<div class="layui-input-block" style="margin-right: -10px;">
+							<input type="text" :value="obj.isbn" required lay-verify="required" name="isbn"  autocomplete="off" placeholder="请输入ISBN号" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-form-item layui-form-text layui-col-xs6">
+						<label class="layui-form-label">简介：</label>
+						<div class="layui-input-block" style="margin-right: -10px;">
+							<textarea name="details" :value="obj.details" required lay-verify="required" placeholder="请输入简介" class="layui-textarea"></textarea>
+						</div>
+					</div>
+					<div class="layui-form-item layui-col-xs6">
+						<label class="layui-form-label">出版社</label>
+						<div class="layui-input-block" style="margin-right: -10px;">
+							<select name="press" required lay-verify="required" :value="obj.press">
+								<option value="">请选择出版社</option>
+								<option :value="item.id" v-for="item in list">{{item.name}}</option>
+							</select>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<div class="layui-inline layui-col-xs3">
+							<label class="layui-form-label">出版时间：</label>
+							<div class="layui-input-block">
+								<input type="text" :value="obj.pushTime" name="pushTime" id="date1" autocomplete="off" class="layui-input" placeholder="请选择出版时间">
+							</div>
+						</div>
+						<div class="layui-inline layui-col-xs3">
+							<label class="layui-form-label">打印时间：</label>
+							<div class="layui-input-block">
+								<input type="text" :value="obj.printTime" name="printTime" id="date2" autocomplete="off" class="layui-input" placeholder="请选择打印时间">
+							</div>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<div class="layui-inline layui-col-xs3">
+							<label class="layui-form-label">版次：</label>
+							<div class="layui-input-block">
+								<input type="text" :value="obj.edition" name="edition"  autocomplete="off" placeholder="请输入版次" class="layui-input">
+							</div>
+						</div>
+						<div class="layui-inline layui-col-xs3">
+							<label class="layui-form-label">印次：</label>
+							<div class="layui-input-block">
+								<input type="text" :value="obj.print" name="print"  autocomplete="off" placeholder="请输入印次" class="layui-input">
+							</div>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<div class="layui-inline layui-col-xs3">
+							<label class="layui-form-label">规格：</label>
+							<div class="layui-input-block">
+								<input type="text" :value="obj.specs" name="specs"  autocomplete="off" placeholder="请输入规格" class="layui-input">
+							</div>
+						</div>
+						<div class="layui-inline layui-col-xs3">
+							<label class="layui-form-label">数量：</label>
+							<div class="layui-input-block">
+								<input type="text" :value="obj.count" required lay-verify="required" name="count"  autocomplete="off" placeholder="请输入数量" class="layui-input">
+							</div>
+						</div>
+					</div>
+					<div class="layui-form-item layui-col-xs6">
+						<label class="layui-form-label">单价：</label>
+						<div class="layui-input-block" style="margin-right: -10px;">
+							<input type="text" :value="obj.price" required lay-verify="required" name="price"  autocomplete="off" placeholder="请输入单价" class="layui-input">
+						</div>
+					</div>
+					<div class="layui-form-item" style="text-align: center;">
+						<div class="layui-btn" style="width: 200px;" lay-submit="" lay-filter="add">提 交</div>
+					</div>
+					<div class="img">
+						<img :src="url+fileid" class="layui-upload-img" id="demo1" v-if="obj!=null">
+						<img class="layui-upload-img" id="demo1" v-if="obj==null">
+						<div class="layui-upload" style="text-align: center;">
+							<button type="button" class="layui-btn" id="test1">上传封面</button>
+							<div class="layui-upload-list">
+								<p id="demoText"></p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="../../layuiadmin/layui/layui.js"></script>
+	<script>
+		var vue = new Vue({
+			el:".layui-fluid",
+			data:{
+				obj:[],
+				list:[],
+				form:null,
+				fileid:"",
+				url:''
+			},
+			created:function(){
+				$.get("http://localhost:8088/book/press/",function(res){
+					vue.list = res.data
+				})
+				if(par.id!=null){
+					//回显
+					$.get("http://localhost:8088/book/books/?id="+par.id,function(res){
+						console.log(res.data[0])
+						vue.obj = res.data[0]
+						vue.fileid = res.data[0].file
+					})
+					//获取url
+					$.get("http://localhost:8088/book/getServerUrl",function(res){
+						vue.url = res
+						console.log(res)
+					});
+				}
+			},
+			updated:function(){
+				if(vue.form!=null){
+					vue.form.render()
+				}
+			}
+		})
+		layui.use(['laydate', 'form', 'upload'], function() {
+			var form = layui.form
+			vue.form = form
+			var laydate = layui.laydate;
+			var upload = layui.upload;
+
+			upload.render({
+				elem: '#test1',
+				url: 'http://localhost:8088/book/uploadfile',
+				before: function(obj) {
+					//预读本地文件示例，不支持ie8
+					obj.preview(function(index, file, result) {
+						$('#demo1').attr('src', result); //图片链接（base64）
+					});
+				},
+				done: function(res){
+					vue.fileid = res.data[0]
+					console.log(res.data[0])
+				}
+			});
+
+			laydate.render({
+				elem: "#date1"
+			})
+
+			laydate.render({
+				elem: "#date2",
+			})
+			//提交
+			form.on('submit(add)', function(obj) {
+				layer.load(2);
+				var field = obj.field;
+				field.cover = vue.fileid
+				$.post("http://localhost:8088/book/books/",field, function(res) {
+					if(res.code==0){
+						setTimeout(function(){
+							layer.closeAll('loading');
+							layer.msg("提交成功")
+							//跳转
+							setTimeout(function(){
+								$(location).attr('href', 'book-add.html');
+							},1000)
+						}, 1000)
+					}else{
+						layer.closeAll('loading');
+						layer.alert("提交失败！", {
+							icon: 2
+						})
+					}
+				})
+			});
+		});
+	</script>
+</html>

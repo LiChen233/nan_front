@@ -8,9 +8,22 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
 		<link rel="stylesheet" href="../layuiadmin/layui/css/layui.css" media="all">
 		<link rel="stylesheet" href="../layuiadmin/style/admin.css" media="all">
+		<script src="../layuiadmin/js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../layuiadmin/js/getCookie.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../layuiadmin/js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../layuiadmin/js/Tools.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			//从cookie中获取登陆信息
+			var id = getCookie("id");
+			if (id == '' || id == null) {
+				//如果用户没登录,则跳转至登陆页
+				$(location).attr('href', 'user/login.html');
+			}
+			var nickName = getCookie("nickName");
+			var admin = getCookie("admin");
+		</script>
 	</head>
 	<body class="layui-layout-body">
-
 		<div id="LAY_app">
 			<div class="layui-layout layui-layout-admin">
 				<div class="layui-header">
@@ -28,15 +41,6 @@
 						</li>
 					</ul>
 					<ul class="layui-nav layui-layout-right" lay-filter="layadmin-layout-right">
-
-						<li class="layui-nav-item" lay-unselect>
-							<a lay-href="app/message/index.html" layadmin-event="message" lay-text="消息中心">
-								<i class="layui-icon layui-icon-notice"></i>
-
-								<!-- 如果有新消息，则显示小圆点 -->
-								<span class="layui-badge-dot"></span>
-							</a>
-						</li>
 						<li class="layui-nav-item layui-hide-xs" lay-unselect>
 							<a href="javascript:;" layadmin-event="theme">
 								<i class="layui-icon layui-icon-theme"></i>
@@ -49,7 +53,7 @@
 						</li>
 						<li class="layui-nav-item" lay-unselect style="margin-right: 20px;">
 							<a href="javascript:;">
-								<cite>用户名字</cite>
+								<cite>{{nickName}}</cite>
 							</a>
 							<dl class="layui-nav-child">
 								<dd><a lay-href="set/user/info.html">基本资料</a></dd>
@@ -65,7 +69,7 @@
 				<div class="layui-side layui-side-menu">
 					<div class="layui-side-scroll">
 						<div class="layui-logo" lay-href="home/console.html">
-							<span>舟山市行政机关合同管理系统</span>
+							<span>合同管理系统</span>
 						</div>
 
 						<ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu" lay-filter="layadmin-system-side-menu">
@@ -74,35 +78,32 @@
 									<i class="layui-icon layui-icon-home"></i>
 									<cite>主页</cite>
 								</a>
-								<dl class="layui-nav-child">
+								<dl class="layui-nav-child" v-if="admin==1">
 									<dd data-name="console" class="layui-this">
-										<a lay-href="ledger/console.html">工作台</a>
+										<a lay-href="ledger/console.html">图书新闻</a>
+									</dd>
+									<dd>
+										<a lay-href="#">我要借书</a>
+									</dd>
+									<dd>
+										<a lay-href="#">已借书籍</a>
 									</dd>
 								</dl>
-							</li>
-							<li data-name="component" class="layui-nav-item">
-								<a href="javascript:;" lay-tips="组件" lay-direction="2">
-									<i class="layui-icon layui-icon-component"></i>
-									<cite>合同台账</cite>
-								</a>
-								<dl class="layui-nav-child">
-									<dd>
-										<a lay-href="ledger/my-contract.html">我的合同</a>
+								<dl class="layui-nav-child" v-if="admin==0">
+									<dd data-name="console" class="layui-this">
+										<a lay-href="ledger/console.html">图书新闻</a>
+									</dd>
+									<dd data-name="console">
+										<a lay-href="book/book-manager.html">所有书籍</a>
 									</dd>
 									<dd>
-										<a lay-href="ledger/contract-registration.html">合同登记</a>
+										<a lay-href="book/book-add.html">上架书籍</a>
 									</dd>
 									<dd>
-										<a lay-href="ledger/draft.html">合同草案预审</a>
+										<a lay-href="#">挂失处理</a>
 									</dd>
 									<dd>
-										<a lay-href="">合同备案审查</a>
-									</dd>
-									<dd>
-										<a lay-href="">合同履行管理</a>
-									</dd>
-									<dd>
-										<a lay-href="">已履行合同归档</a>
+										<a lay-href="#">归还书籍</a>
 									</dd>
 								</dl>
 							</li>
@@ -137,7 +138,7 @@
 				<!-- 主体内容 -->
 				<div class="layui-body" id="LAY_app_body">
 					<div class="layadmin-tabsbody-item layui-show">
-						<iframe src="ledger/console.html" frameborder="0" class="layadmin-iframe"></iframe>
+						<iframe src="book/book-manager.html" frameborder="0" class="layadmin-iframe"></iframe>
 					</div>
 				</div>
 
@@ -148,6 +149,14 @@
 
 		<script src="../layuiadmin/layui/layui.js"></script>
 		<script>
+			var vue = new Vue({
+				el:"#LAY_app",
+				data:{
+					nickName:nickName,
+					admin:admin
+				}
+			})
+			
 			layui.config({
 				base: '../layuiadmin/' //静态资源所在路径
 			}).extend({
