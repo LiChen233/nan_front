@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>书籍详情</title>
+		<link rel="stylesheet" href="../../layuiadmin/layui/css/layui.css" media="all">
+		<script src="../../layuiadmin/js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/getCookie.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/Tools.js" type="text/javascript" charset="utf-8"></script>
+		<style type="text/css">
+			#demo1 {
+				width: 260px;
+				height: 360px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="layui-fluid">
+			<div class="layui-card" style="padding: 10px 20px 20px 20px;margin-top: 20px;">
+				<div class="layui-form layui-row" style="margin-top: 30px;">
+					<fieldset class="layui-elem-field layui-field-title">
+						<legend>书籍详情</legend>
+					</fieldset>
+					<div class="layui-form-item">
+						<div class="layui-inline layui-col-xs2" style="margin-left: 120px;">
+							<img :src="url+fileid" class="layui-upload-img" id="demo1">
+						</div>
+						<div class="layui-inline layui-col-xs8">
+							<table class="layui-table">
+								<colgroup>
+									<col width="300">
+									<col width="300">
+									<col width="300">
+								</colgroup>
+								<tbody>
+									<tr>
+										<td>书名：{{obj.name}}</td>
+										<td>作者：{{obj.author}}</td>
+										<td>ISBN：{{obj.isbn}}</td>
+									</tr>
+									<tr>
+										<td>出版社{{obj.press}}</td>
+										<td>出版时间：{{obj.push_time}}</td>
+										<td>打印时间：{{obj.print_time}}</td>
+
+									</tr>
+									<tr>
+										<td>版次：{{obj.edition}}</td>
+										<td>印次：{{obj.print}}</td>
+										<td>规格：{{obj.specs}}</td>
+									</tr>
+									<tr>
+										<td>剩余数量：{{obj.count}}</td>
+										<td>单价：{{obj.price}}</td>
+										<td>类型：{{obj.type}}</td>
+									</tr>
+									<tr>
+										<td colspan="3">总评分：</td>
+									</tr>
+									<tr>
+										<td colspan="3">说明：{{obj.details}}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="layui-form-item" style="text-align: right;">
+						<div class="layui-btn" style="margin-right: 200px;">
+							我要借书
+						</div>
+					</div>
+					<fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+						<legend>评论内容</legend>
+					</fieldset>
+					<div class="layui-form-item " style="margin-left: 50px;">
+						<div class="layui-form-item layui-form-text layui-col-xs9">
+							<label class="layui-form-label">评论：</label>
+							<div class="layui-input-block">
+								<textarea placeholder="请输入内容" class="layui-textarea"></textarea>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-xs2" style="margin-left: 30px;">
+							<div id="test3"></div>
+							<div>
+								<div id="test4"></div>
+							</div>
+						</div>
+						<div class="layui-inline layui-col-xs2" style="margin-left: 30px;">
+							<div class="layui-btn layui-btn-normal">
+								提交评论
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="../../layuiadmin/layui/layui.js"></script>
+	<script>
+		var vue = new Vue({
+			el: ".layui-fluid",
+			data: {
+				obj: [],
+				list: [],
+				types: [],
+				form: null,
+				fileid: "",
+				url: ''
+			},
+			created: function() {
+				$.get("http://localhost:8088/book/press/", function(res) {
+					vue.list = res.data
+				})
+				$.get("http://localhost:8088/book/types/", function(res) {
+					vue.types = res.data
+				})
+				//获取url
+				$.get("http://localhost:8088/book/getServerUrl", function(res) {
+					vue.url = res
+					console.log(res)
+				});
+				if (par.id != null) {
+					//回显
+					$.get("http://localhost:8088/book/books/?id=" + par.id, function(res) {
+						console.log(res.data[0])
+						vue.obj = res.data[0]
+						vue.fileid = res.data[0].file
+					})
+				}
+			},
+			updated: function() {
+				if (vue.form != null) {
+					vue.form.render()
+				}
+			}
+		})
+		layui.use(['laydate', 'form', 'upload', 'rate'], function() {
+			var form = layui.form
+			vue.form = form
+			var laydate = layui.laydate;
+			var upload = layui.upload;
+			var rate = layui.rate;
+			
+			rate.render({
+				elem: '#test4',
+				half: true,
+				text: true
+			})
+
+			upload.render({
+				elem: '#test1',
+				url: 'http://localhost:8088/book/uploadfile',
+				before: function(obj) {
+					//预读本地文件示例，不支持ie8
+					obj.preview(function(index, file, result) {
+						$('#demo1').attr('src', result); //图片链接（base64）
+					});
+				},
+				done: function(res) {
+					vue.fileid = res.data[0]
+					console.log(res.data[0])
+				}
+			});
+
+			laydate.render({
+				elem: "#date1"
+			})
+
+			laydate.render({
+				elem: "#date2",
+			})
+
+			function add(res) {
+				if (res.code == 0) {
+					setTimeout(function() {
+						layer.closeAll('loading');
+						layer.msg("提交成功")
+						//跳转
+						setTimeout(function() {
+							$(location).attr('href', 'book-add.html');
+						}, 1000)
+					}, 1000)
+				} else {
+					layer.closeAll('loading');
+					layer.alert("提交失败！", {
+						icon: 2
+					})
+				}
+			}
+
+			//提交
+			form.on('submit(add)', function(obj) {
+				layer.load(2);
+				var field = obj.field;
+				field.cover = vue.fileid
+				if (par.id != null && par.id != '') {
+					field._method = "PUT"
+					field.id = par.id
+					$.post("http://localhost:8088/book/books/", field, function(res) {
+						add(res)
+					})
+				} else {
+					$.post("http://localhost:8088/book/books/", field, function(res) {
+						add(res)
+					})
+				}
+			});
+		});
+	</script>
+</html>

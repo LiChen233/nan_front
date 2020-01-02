@@ -78,21 +78,15 @@
 									<i class="layui-icon layui-icon-home"></i>
 									<cite>主页</cite>
 								</a>
-								<dl class="layui-nav-child" v-if="admin==1">
-									<dd data-name="console" class="layui-this">
-										<a lay-href="ledger/console.html">图书新闻</a>
+								<dl class="layui-nav-child" v-if="admin==0">
+									<dd>
+										<a lay-href="book/book-borrow.html">我要借书</a>
 									</dd>
 									<dd>
-										<a lay-href="#">我要借书</a>
-									</dd>
-									<dd>
-										<a lay-href="#">已借书籍</a>
+										<a lay-href="book/book-borrowed.html">已借书籍</a>
 									</dd>
 								</dl>
 								<dl class="layui-nav-child" v-if="admin==0">
-									<dd data-name="console" class="layui-this">
-										<a lay-href="ledger/console.html">图书新闻</a>
-									</dd>
 									<dd data-name="console">
 										<a lay-href="book/book-manager.html">所有书籍</a>
 									</dd>
@@ -103,11 +97,17 @@
 										<a lay-href="#">挂失处理</a>
 									</dd>
 									<dd>
-										<a lay-href="#">归还书籍</a>
+										<a lay-href="#">归还处理</a>
 									</dd>
 								</dl>
 							</li>
 						</ul>
+						<script type="text/javascript">
+							var as = $("#LAY-system-side-menu>li>dl>dd>a")
+							$.each(as,function(index,item){
+								$(item).attr("lay-href",$(item).attr("lay-href")+"?userid="+id)
+							})
+						</script>
 					</div>
 				</div>
 
