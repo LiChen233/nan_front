@@ -56,7 +56,9 @@
 										<td>类型：{{obj.type}}</td>
 									</tr>
 									<tr>
-										<td colspan="3">总评分：</td>
+										<td colspan="3">
+											总评分：<div id="star" style="margin-top: 7px;"></div>{{obj.star!=null?obj.star:"暂无评"}}分
+										</td>
 									</tr>
 									<tr>
 										<td colspan="3">说明：{{obj.details}}</td>
@@ -66,7 +68,7 @@
 						</div>
 					</div>
 					<div class="layui-form-item" style="text-align: right;">
-						<div class="layui-btn" style="margin-right: 200px;">
+						<div class="layui-btn" style="margin-right: 200px;" id="borrow">
 							我要借书
 						</div>
 					</div>
@@ -77,21 +79,32 @@
 						<div class="layui-form-item layui-form-text layui-col-xs9">
 							<label class="layui-form-label">评论：</label>
 							<div class="layui-input-block">
-								<textarea placeholder="请输入内容" class="layui-textarea"></textarea>
+								<textarea name="remark" required lay-verify="required" placeholder="请输入内容" class="layui-textarea"></textarea>
 							</div>
 						</div>
 						<div class="layui-inline layui-col-xs2" style="margin-left: 30px;">
-							<div id="test3"></div>
-							<div>
-								<div id="test4"></div>
-							</div>
+							<div id="test4"></div>
 						</div>
 						<div class="layui-inline layui-col-xs2" style="margin-left: 30px;">
-							<div class="layui-btn layui-btn-normal">
+							<div class="layui-btn layui-btn-normal" lay-submit="" lay-filter="add" id="add">
 								提交评论
 							</div>
 						</div>
 					</div>
+					<template v-for="item,i in star">
+						<hr v-if="i!=0">
+						<div class="layui-form-item" style="margin:30px 0px 30px 50px;">
+							<div class="layui-col-xs1" style="text-align: right;font-weight: bold;line-height: 35px;">
+								{{item.nickName}}:
+							</div>
+							<div class="layui-col-xs8" style="margin: 0 10px;text-indent: 1em;margin-top: 8px;">
+								{{item.remark}}
+							</div>
+							<div class="layui-col-xs1" style="text-align: left;color: gray;">
+								{{item.upTime}}<br />评分<span style="color: orange;">{{item.star}}</span>
+							</div>
+						</div>
+					</template>
 				</div>
 			</div>
 		</div>
@@ -106,7 +119,10 @@
 				types: [],
 				form: null,
 				fileid: "",
-				url: ''
+				url: '',
+				rate:null,
+				star:[],
+				rate:null
 			},
 			created: function() {
 				$.get("http://localhost:8088/book/press/", function(res) {
@@ -125,83 +141,83 @@
 					vue.obj = res.data[0]
 					vue.fileid = res.data[0].cover
 				})
+				//获取评论
+				$.get("http://localhost:8088/book/star/?bookId="+par.id,function(res){
+					vue.star = res.data
+				})
 			},
 			updated: function() {
 				if (vue.form != null) {
 					vue.form.render()
 				}
+				if(vue.rate!=null){
+					vue.rate.render()
+				}
 			}
 		})
-		layui.use(['laydate', 'form', 'upload', 'rate'], function() {
+		layui.use(['form', 'rate'], function() {
 			var form = layui.form
 			vue.form = form
-			var laydate = layui.laydate;
-			var upload = layui.upload;
 			var rate = layui.rate;
-			
+			vue.rate = rate
+
 			rate.render({
 				elem: '#test4',
 				half: true,
-				text: true
-			})
-
-			upload.render({
-				elem: '#test1',
-				url: 'http://localhost:8088/book/uploadfile',
-				before: function(obj) {
-					//预读本地文件示例，不支持ie8
-					obj.preview(function(index, file, result) {
-						$('#demo1').attr('src', result); //图片链接（base64）
-					});
-				},
-				done: function(res) {
-					vue.fileid = res.data[0]
-					console.log(res.data[0])
+				text: true,
+				choose: function(value) {
+					vue.rate = value
 				}
-			});
-
-			laydate.render({
-				elem: "#date1"
 			})
-
-			laydate.render({
-				elem: "#date2",
+			
+			rate.render({
+				elem: '#star',
+				half: true,
+				value: vue.obj.star,
+				readonly:true
 			})
-
-			function add(res) {
-				if (res.code == 0) {
-					setTimeout(function() {
-						layer.closeAll('loading');
-						layer.msg("提交成功")
-						//跳转
-						setTimeout(function() {
-							$(location).attr('href', 'book-add.html');
-						}, 1000)
-					}, 1000)
-				} else {
-					layer.closeAll('loading');
-					layer.alert("提交失败！", {
-						icon: 2
+			
+			$("li").attr("class","layui-inline")
+			
+			$("#borrow").click(function(){
+				if(vue.obj.count==0){
+					layer.alert("该书没有剩余，不可借！",{icon:2})
+					return false;
+				}
+				layer.confirm('确认借一本:<br/>《'+vue.obj.name+'》', {
+					btn: ['确认', '取消'] //按钮
+				}, function(){
+					$.post("http://localhost:8088/book/borrow/",{
+						userId : par.userid,
+						bookId : vue.obj.id
+					},function (res){
+						layer.closeAll()
+						layer.msg("已借一本"+'《'+vue.obj.name+'》')
+						var index=parent.layer.getFrameIndex(window.name); //获取当前窗口的name
+						setTimeout(function(){
+							parent.layer.close(index);		//关闭窗口
+						},1000)
 					})
-				}
-			}
+				});
+			})
 
 			//提交
 			form.on('submit(add)', function(obj) {
-				layer.load(2);
-				var field = obj.field;
-				field.cover = vue.fileid
-				if (par.id != null && par.id != '') {
-					field._method = "PUT"
-					field.id = par.id
-					$.post("http://localhost:8088/book/books/", field, function(res) {
-						add(res)
-					})
-				} else {
-					$.post("http://localhost:8088/book/books/", field, function(res) {
-						add(res)
-					})
+				if(vue.rate == null){
+					layer.alert("请评分！",{icon:2})
 				}
+				var field = obj.field
+				field.star = vue.rate
+				field.userId = par.userid
+				field.bookId = par.id
+				$.post("http://localhost:8088/book/star/",field,function(res){
+					if(res.code==0){
+						layer.msg("评论成功")
+						$(location).attr('href', "book-details.html?id=" + par.id + "&userid=" + par.userid);
+					}else{
+						layer.msg("评论失败！")
+					}
+				})
 			});
 		});
 	</script>

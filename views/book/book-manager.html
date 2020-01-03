@@ -204,8 +204,8 @@
 				}else if (layEvent == 'xq') {
 					layer.open({
 						type: 2,
-						title: '编辑',
-						content: 'book-details.html?id=' + data.id,
+						title: '详情',
+						content: 'book-details.html?id=' + data.id+"&userid="+par.userid,
 						maxmin: true,
 						area: ['100%', '100%']
 					});
@@ -217,7 +217,7 @@
 				layer.open({
 					type: 2,
 					title: '编辑',
-					content: 'book-add.html?id=' + data.id,
+					content: 'book-add.html?id=' + data.id+"&userid="+par.userid,
 					maxmin: true,
 					area: ['100%', '100%']
 				});
