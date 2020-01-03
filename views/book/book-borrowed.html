@@ -15,13 +15,39 @@
 				<div class="layui-form" style="margin-top: 30px;">
 					<div class="layui-form-item">
 						<table class="layui-table" id="table" lay-filter="table"></table>
+						<script type="text/html" id="status">
+							{{#if(d.status=='B'){}}
+								正在借出
+							{{#}else if(d.status=='A'){}}
+								申请归还
+							{{#}else if(d.status=='R'){}}
+								已归还
+							{{#}else if(d.status=='S'){}}
+								申请丢失
+							{{#}else if(d.status=='L'){}}
+								已丢失且已缴清费用
+							{{#}else if(d.status=='RN'){}}
+								还书申请失败
+							{{#}else if(d.status=='LN'){}}
+								丢失申请失败
+							{{#}}}
+						</script>
 						<script type="text/html" id="btns">
-							<div class="layui-btn layui-btn-xs" lay-event="gh">
-								归还
-							</div>
-							<div class="layui-btn layui-btn-xs layui-btn-normal" lay-event="gs">
-								丢失
-							</div>
+							{{#if(d.status=='B' || d.status=='RN' || d.status=='LN'){}}
+								<div class="layui-btn layui-btn-xs" lay-event="gh">
+									归还
+								</div>
+								<div class="layui-btn layui-btn-xs layui-btn-normal" lay-event="ds">
+									丢失
+								</div>
+							{{#}else{}}
+								<div class="layui-btn layui-btn-xs layui-btn-disabled">
+									归还
+								</div>
+								<div class="layui-btn layui-btn-xs layui-btn-normal layui-btn-disabled">
+									丢失
+								</div>
+							{{#}}}
 						</script>
 					</div>
 				</div>
@@ -31,11 +57,9 @@
 	<script src="../../layuiadmin/layui/layui.js"></script>
 	<script>
 		var vue = new Vue({
-			el:'#search',
 			data:{
 				list:[],
-				types:[],
-				form:null
+				types:[]
 			},
 			created:function(){
 				$.get("http://localhost:8088/book/press/",function(res){
@@ -44,28 +68,15 @@
 				$.get("http://localhost:8088/book/types/",function(res){
 					vue.types = res.data
 				})
-			},
-			updated:function(){
-				if(vue.form!=null){
-					vue.form.render()
-				}
 			}
 		})
 		
-		layui.use(['laydate', 'form', 'table'], function() {
-			var form = layui.form;
-			vue.form = form
-			var laydate = layui.laydate;
+		layui.use(['table'], function() {
 			var table = layui.table;
-			
-			laydate.render({
-				elem:"#laydate1"
-			})
-
 			table.render({
 				elem: '#table',
-				url: 'http://localhost:8088/book/books/',
-				where:{status:0},
+				url: 'http://localhost:8088/book/borrow/',
+				where:{userId:par.userid},
 				cols: [
 					[{
 						title: "序号",
@@ -83,7 +94,6 @@
 						title: "类别",
 						align: "center",
 						templet: d => {
-							console.log(d.type)
 							for (var i = 0; i < vue.types.length; i++) {
 								if (d.type == vue.types[i].id) {
 									return vue.types[i].typeName
@@ -104,13 +114,21 @@
 							return "未知"
 						}
 					}, {
-						field: "pushTime",
-						title: "出版时间",
-						align: "center"
+						field: "borrowTime",
+						title: "借书日期",
+						align: "center",
+						sort: true
 					}, {
-						field: "count",
-						title: "剩余数量",
-						align: "center"
+						field: "returnTime",
+						title: "还书日期",
+						align: "center",
+						sort: true
+					}, {
+						field: "status",
+						title: "状态",
+						align: "center",
+						toolbar: "#status",
+						sort: true
 					}, {
 						title: "操作",
 						align: "center",
@@ -128,47 +146,35 @@
 			table.on('tool(table)', function(obj) {
 				var data = obj.data;
 				var layEvent = obj.event;
-				var tr = obj.tr;
-				if (layEvent == 'xq') {
-					layer.open({
-						type: 2,
-						title: '编辑',
-						content: 'book-details.html?id=' + data.id,
-						maxmin: true,
-						area: ['100%', '100%']
-					});
-				}else if (layEvent == 'js') {
-					if(data.count==0){
-						layer.alert("该书没有剩余，不可借！",{icon:2})
-						return false;
-					}
-					layer.confirm('确认借一本:<br/>《'+data.name+'》', {
+				if (layEvent == 'gh') {
+					layer.confirm('是否申请归还一本：<br/>《'+data.name+'》', {
 						btn: ['确认', '取消'] //按钮
 					}, function(){
 						$.post("http://localhost:8088/book/borrow/",{
-							userId : par.userid,
-							bookId : data.id
+							_method: "PUT",
+							id : data.id,
+							status : 'A'
 						},function (res){
 							layer.closeAll()
-							layer.msg("已借一本"+'《'+data.name+'》')
+							layer.msg("已归还一本"+'《'+data.name+'》')
+							table.reload('table')
+						})
+					});
+				}else if (layEvent == 'ds') {
+					layer.confirm('《'+data.name+'》单价为：'+data.price+'请缴纳费用', {
+						btn: ['确认', '取消'] //按钮
+					}, function(){
+						$.post("http://localhost:8088/book/borrow/",{
+							_method: "PUT",
+							id : data.id,
+							status : 'S'
+						},function (res){
+							layer.closeAll()
+							layer.msg('已缴清费用')
 							table.reload('table')
 						})
 					});
 				}
-			});
-			//双击
-			table.on('rowDouble(table)', function(obj) {
-				var data = obj.data;
-				$("#caseform").attr("lay-href", "case/case-form.html?id=" + data.id + "&userid=" + userid);
-				$("#caseform").click();
-			});
-
-			//搜索
-			form.on('submit(search)', function(obj) {
-				let field = obj.field
-				table.reload('table',{
-					where:field
-				})
 			});
 		});
 	</script>

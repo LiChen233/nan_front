@@ -167,14 +167,12 @@
 				//获取url
 				$.get("http://localhost:8088/book/getServerUrl",function(res){
 					vue.url = res
-					console.log(res)
 				});
 				if(par.id!=null){
 					//回显
 					$.get("http://localhost:8088/book/books/?id="+par.id,function(res){
-						console.log(res.data[0])
 						vue.obj = res.data[0]
-						vue.fileid = res.data[0].file
+						vue.fileid = res.data[0].cover
 					})
 				}
 			},
@@ -201,7 +199,6 @@
 				},
 				done: function(res){
 					vue.fileid = res.data[0]
-					console.log(res.data[0])
 				}
 			});
 
@@ -213,14 +210,14 @@
 				elem: "#date2",
 			})
 			
-			function add(res){
+			function add(res,id){
 				if(res.code==0){
 					setTimeout(function(){
 						layer.closeAll('loading');
 						layer.msg("提交成功")
 						//跳转
 						setTimeout(function(){
-							$(location).attr('href', 'book-add.html');
+							$(location).attr('href', 'book-add.html?id='+par.id);
 						},1000)
 					}, 1000)
 				}else{

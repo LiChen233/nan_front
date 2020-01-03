@@ -50,7 +50,7 @@
 					$.get("http://localhost:8088/book/user/?name=" + field.name + "&pwd=" + field.pwd, function(res) {
 						console.log(res)
 						if (res.code == 0) {
-							var time = 0;
+							var time = 1;
 							if (field.remember == "on") {
 								time = 30
 							}

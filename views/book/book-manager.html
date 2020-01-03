@@ -7,6 +7,7 @@
 		<script src="../../layuiadmin/js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="../../layuiadmin/js/getCookie.js" type="text/javascript" charset="utf-8"></script>
 		<script src="../../layuiadmin/js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../layuiadmin/js/Tools.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
 		<div class="layui-fluid">
@@ -37,7 +38,7 @@
 						</div>
 						<div class="layui-inline">
 							<button class="layui-btn" lay-submit lay-filter="search">
-								<i class="layui-icon layui-icon-search"></i>合同检索
+								<i class="layui-icon layui-icon-search"></i>搜索
 							</button>
 						</div>
 					</div>
@@ -213,8 +214,13 @@
 			//双击
 			table.on('rowDouble(table)', function(obj) {
 				var data = obj.data;
-				$("#caseform").attr("lay-href", "case/case-form.html?id=" + data.id + "&userid=" + userid);
-				$("#caseform").click();
+				layer.open({
+					type: 2,
+					title: '编辑',
+					content: 'book-add.html?id=' + data.id,
+					maxmin: true,
+					area: ['100%', '100%']
+				});
 			});
 
 			//搜索

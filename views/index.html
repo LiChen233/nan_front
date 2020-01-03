@@ -59,7 +59,7 @@
 								<dd><a lay-href="set/user/info.html">基本资料</a></dd>
 								<dd><a lay-href="set/user/password.html">修改密码</a></dd>
 								<hr>
-								<dd layadmin-event="logout" style="text-align: center;"><a>退出</a></dd>
+								<dd style="text-align: center;"><a href="#" id="logout">退出</a></dd>
 							</dl>
 						</li>
 					</ul>
@@ -69,7 +69,7 @@
 				<div class="layui-side layui-side-menu">
 					<div class="layui-side-scroll">
 						<div class="layui-logo" lay-href="home/console.html">
-							<span>合同管理系统</span>
+							<span>图书管理系统</span>
 						</div>
 
 						<ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu" lay-filter="layadmin-system-side-menu">
@@ -78,8 +78,8 @@
 									<i class="layui-icon layui-icon-home"></i>
 									<cite>主页</cite>
 								</a>
-								<dl class="layui-nav-child" v-if="admin==0">
-									<dd>
+								<dl class="layui-nav-child" v-if="admin==1">
+									<dd class="layui-this">
 										<a lay-href="book/book-borrow.html">我要借书</a>
 									</dd>
 									<dd>
@@ -87,17 +87,23 @@
 									</dd>
 								</dl>
 								<dl class="layui-nav-child" v-if="admin==0">
-									<dd data-name="console">
+									<dd class="layui-this">
+										<a lay-href="book/book-borrow.html">我要借书</a>
+									</dd>
+									<dd>
+										<a lay-href="book/book-borrowed.html">已借书籍</a>
+									</dd>
+									<dd>
 										<a lay-href="book/book-manager.html">所有书籍</a>
 									</dd>
 									<dd>
 										<a lay-href="book/book-add.html">上架书籍</a>
 									</dd>
 									<dd>
-										<a lay-href="#">挂失处理</a>
+										<a lay-href="book/book-borrow-handle.html">归还处理</a>
 									</dd>
 									<dd>
-										<a lay-href="#">归还处理</a>
+										<a lay-href="book/book-lost-handle.html">挂失处理</a>
 									</dd>
 								</dl>
 							</li>
@@ -138,7 +144,7 @@
 				<!-- 主体内容 -->
 				<div class="layui-body" id="LAY_app_body">
 					<div class="layadmin-tabsbody-item layui-show">
-						<iframe src="book/book-manager.html" frameborder="0" class="layadmin-iframe"></iframe>
+						<iframe src="book/book-borrow.html" frameborder="0" class="layadmin-iframe"></iframe>
 					</div>
 				</div>
 
@@ -149,6 +155,7 @@
 
 		<script src="../layuiadmin/layui/layui.js"></script>
 		<script>
+					
 			var vue = new Vue({
 				el:"#LAY_app",
 				data:{
@@ -162,6 +169,13 @@
 			}).extend({
 				index: 'lib/index' //主入口模块
 			}).use('index');
+			
+			$("#logout").click(function(){
+				setCookie("id", null, 0)
+				setCookie("nickName", null, 0)
+				setCookie("admin", null, 0)
+				$(location).attr('href', 'user/login.html');
+			})
 		</script>
 	</body>
 </html>

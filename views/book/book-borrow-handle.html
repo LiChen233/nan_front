@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>图书管理</title>
+		<title>归还处理</title>
 		<link rel="stylesheet" href="../../layuiadmin/layui/css/layui.css" media="all">
 		<script src="../../layuiadmin/js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="../../layuiadmin/js/getCookie.js" type="text/javascript" charset="utf-8"></script>
@@ -14,42 +14,30 @@
 			<div class="layui-card" style="padding: 10px 20px 20px 20px;margin-top: 20px;">
 				<div class="layui-form" style="margin-top: 30px;">
 					<div class="layui-form-item">
-						<div class="layui-input-inline" style="width: 200px;">
-							<input type="text" name="searchName" lay-verify="title" autocomplete="off" placeholder="请输书名进行搜索"
-							 class="layui-input">
-						</div>
-						<div class="layui-inline">
-							<div class="layui-input-inline">
-								<input name="searchAuthor" type="text" autocomplete="off" class="layui-input" placeholder="作者">
-							</div>
-						</div>
-						<div class="layui-inline" id="search">
-							<div class="layui-input-inline" style="margin-right: -10px;">
-								<select name="searchPress">
-									<option value="">请选择出版社</option>
-									<option :value="item.id" v-for="item in list">{{item.name}}</option>
-								</select>
-							</div>
-						</div>
-						<div class="layui-inline">
-							<div class="layui-input-inline">
-								<input name="searchPushTime" type="text" autocomplete="off" class="layui-input" id="laydate1" placeholder="出版时间">
-							</div>
-						</div>
-						<div class="layui-inline">
-							<button class="layui-btn" lay-submit lay-filter="search">
-								<i class="layui-icon layui-icon-search"></i>搜索
-							</button>
-						</div>
-					</div>
-					<div class="layui-form-item">
 						<table class="layui-table" id="table" lay-filter="table"></table>
+						<script type="text/html" id="status">
+							{{#if(d.status=='B'){}}
+								正在借出
+							{{#}else if(d.status=='A'){}}
+								申请归还
+							{{#}else if(d.status=='R'){}}
+								已归还
+							{{#}else if(d.status=='S'){}}
+								申请丢失
+							{{#}else if(d.status=='L'){}}
+								已丢失且已缴清费用
+							{{#}else if(d.status=='RN'){}}
+								还书申请失败
+							{{#}else if(d.status=='LN'){}}
+								丢失申请失败
+							{{#}}}
+						</script>
 						<script type="text/html" id="btns">
-							<div class="layui-btn layui-btn-xs" lay-event="xq">
-								详情
+							<div class="layui-btn layui-btn-xs" lay-event="cl">
+								处理
 							</div>
-							<div class="layui-btn layui-btn-xs layui-btn-normal" lay-event="js">
-								借书
+							<div class="layui-btn layui-btn-xs layui-btn-normal" lay-event="bcl">
+								不处理
 							</div>
 						</script>
 					</div>
@@ -60,11 +48,9 @@
 	<script src="../../layuiadmin/layui/layui.js"></script>
 	<script>
 		var vue = new Vue({
-			el:'#search',
 			data:{
 				list:[],
-				types:[],
-				form:null
+				types:[]
 			},
 			created:function(){
 				$.get("http://localhost:8088/book/press/",function(res){
@@ -73,28 +59,16 @@
 				$.get("http://localhost:8088/book/types/",function(res){
 					vue.types = res.data
 				})
-			},
-			updated:function(){
-				if(vue.form!=null){
-					vue.form.render()
-				}
 			}
 		})
 		
-		layui.use(['laydate', 'form', 'table'], function() {
-			var form = layui.form;
-			vue.form = form
-			var laydate = layui.laydate;
+		layui.use(['table'], function() {
 			var table = layui.table;
 			
-			laydate.render({
-				elem:"#laydate1"
-			})
-
 			table.render({
 				elem: '#table',
-				url: 'http://localhost:8088/book/books/',
-				where:{status:0},
+				url: 'http://localhost:8088/book/borrow/',
+				where:{status:'A'},
 				cols: [
 					[{
 						title: "序号",
@@ -132,13 +106,22 @@
 							return "未知"
 						}
 					}, {
-						field: "pushTime",
-						title: "出版时间",
+						field: "nickName",
+						title: "借书人",
 						align: "center"
 					}, {
-						field: "count",
-						title: "剩余数量",
+						field: "borrowTime",
+						title: "借书日期",
 						align: "center"
+					}, {
+						field: "returnTime",
+						title: "还书日期",
+						align: "center"
+					}, {
+						field: "status",
+						title: "状态",
+						align: "center",
+						toolbar: "#status"
 					}, {
 						title: "操作",
 						align: "center",
@@ -156,47 +139,35 @@
 			table.on('tool(table)', function(obj) {
 				var data = obj.data;
 				var layEvent = obj.event;
-				var tr = obj.tr;
-				if (layEvent == 'xq') {
-					layer.open({
-						type: 2,
-						title: '编辑',
-						content: 'book-details.html?id=' + data.id,
-						maxmin: true,
-						area: ['100%', '100%']
-					});
-				}else if (layEvent == 'js') {
-					if(data.count==0){
-						layer.alert("该书没有剩余，不可借！",{icon:2})
-						return false;
-					}
-					layer.confirm('确认借一本:<br/>《'+data.name+'》', {
+				if (layEvent == 'cl') {
+					layer.confirm('确认已归还：<br/>《'+data.name+'》', {
 						btn: ['确认', '取消'] //按钮
 					}, function(){
 						$.post("http://localhost:8088/book/borrow/",{
-							userId : par.userid,
-							bookId : data.id
+							_method: "PUT",
+							id : data.id,
+							status : 'R'
 						},function (res){
 							layer.closeAll()
-							layer.msg("已借一本"+'《'+data.name+'》')
+							layer.msg("已归还一本"+'《'+data.name+'》')
+							table.reload('table')
+						})
+					});
+				}else if (layEvent == 'bcl') {
+					layer.confirm('《'+data.name+'》暂未归还？', {
+						btn: ['确认', '取消'] //按钮
+					}, function(){
+						$.post("http://localhost:8088/book/borrow/",{
+							_method: "PUT",
+							id : data.id,
+							status : 'RN'
+						},function (res){
+							layer.closeAll()
+							layer.msg('不处理')
 							table.reload('table')
 						})
 					});
 				}
-			});
-			//双击
-			table.on('rowDouble(table)', function(obj) {
-				var data = obj.data;
-				$("#caseform").attr("lay-href", "case/case-form.html?id=" + data.id + "&userid=" + userid);
-				$("#caseform").click();
-			});
-
-			//搜索
-			form.on('submit(search)', function(obj) {
-				let field = obj.field
-				table.reload('table',{
-					where:field
-				})
 			});
 		});
 	</script>
